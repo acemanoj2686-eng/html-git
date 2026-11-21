@@ -1,0 +1,263 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>XO Game</title>
+<style>
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: Arial, sans-serif;
+    background: linear-gradient(135deg, #141e30, #243b55);
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    color: white;
+}
+
+.game {
+    text-align: center;
+    padding: 30px;
+    width: 350px;
+    max-width: 95%;
+    background: rgba(255,255,255,0.08);
+    border-radius: 20px;
+    box-shadow: 0 10px 35px #0005;
+}
+
+h1 {
+    font-size: 38px;
+    margin-bottom: 10px;
+    color: #00e5ff;
+}
+
+.subtitle {
+    color: #ccc;
+    margin-bottom: 25px;
+}
+
+.score {
+    display: flex;
+    justify-content: space-around;
+    margin-bottom: 20px;
+    font-size: 17px;
+}
+
+.score span {
+    color: #00e5ff;
+    font-weight: bold;
+}
+
+.status {
+    margin-bottom: 20px;
+    font-size: 20px;
+    font-weight: bold;
+    min-height: 25px;
+}
+
+.board {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+}
+
+.cell {
+    height: 90px;
+    border: none;
+    border-radius: 12px;
+    background: #ffffff15;
+    color: white;
+    font-size: 45px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: 0.2s;
+}
+
+.cell:hover:not(:disabled) {
+    background: #ffffff30;
+    transform: scale(1.04);
+}
+
+.cell:disabled {
+    cursor: default;
+}
+
+.cell.x {
+    color: #00e5ff;
+}
+
+.cell.o {
+    color: #ff4081;
+}
+
+.cell.win {
+    background: #16a34a;
+    color: white;
+}
+
+.controls {
+    display: flex;
+    gap: 10px;
+    margin-top: 25px;
+}
+
+button.control {
+    flex: 1;
+    padding: 12px;
+    border: none;
+    border-radius: 8px;
+    font-size: 15px;
+    font-weight: bold;
+    cursor: pointer;
+    background: #00e5ff;
+    color: #142033;
+}
+
+button.control:hover {
+    background: #75f0ff;
+}
+
+footer {
+    margin-top: 20px;
+    font-size: 12px;
+    color: #aaa;
+}
+</style>
+</head>
+
+<body>
+
+<div class="game">
+    <h1>XO GAME</h1>
+    <p class="subtitle">Tic Tac Toe Challenge</p>
+
+    <div class="score">
+        <div>Player X: <span id="scoreX">0</span></div>
+        <div>Player O: <span id="scoreO">0</span></div>
+    </div>
+
+    <div class="status" id="status">Player X's Turn</div>
+
+    <div class="board" id="board">
+        <button class="cell"></button>
+        <button class="cell"></button>
+        <button class="cell"></button>
+        <button class="cell"></button>
+        <button class="cell"></button>
+        <button class="cell"></button>
+        <button class="cell"></button>
+        <button class="cell"></button>
+        <button class="cell"></button>
+    </div>
+
+    <div class="controls">
+        <button class="control" onclick="restart()">New Game</button>
+        <button class="control" onclick="resetAll()">Reset Score</button>
+    </div>
+
+    <footer>Made with ❤️ | XO Game</footer>
+</div>
+
+<script>
+const cells = document.querySelectorAll(".cell");
+const statusText = document.getElementById("status");
+
+let currentPlayer = "X";
+let gameActive = true;
+let board = ["","","","","","","","",""];
+let scores = { X: 0, O: 0 };
+
+const winPatterns = [
+    [0,1,2], [3,4,5], [6,7,8],
+    [0,3,6], [1,4,7], [2,5,8],
+    [0,4,8], [2,4,6]
+];
+
+cells.forEach((cell, index) => {
+    cell.addEventListener("click", () => makeMove(index));
+});
+
+function makeMove(index) {
+    if (board[index] !== "" || !gameActive) return;
+
+    board[index] = currentPlayer;
+    cells[index].textContent = currentPlayer;
+    cells[index].classList.add(currentPlayer.toLowerCase());
+    cells[index].disabled = true;
+
+    checkWinner();
+}
+
+function checkWinner() {
+    let winningPattern = null;
+
+    for (let pattern of winPatterns) {
+        const [a,b,c] = pattern;
+
+        if (
+            board[a] &&
+            board[a] === board[b] &&
+            board[b] === board[c]
+        ) {
+            winningPattern = pattern;
+            break;
+        }
+    }
+
+    if (winningPattern) {
+        winningPattern.forEach(index => {
+            cells[index].classList.add("win");
+        });
+
+        statusText.textContent = "🎉 Player " + currentPlayer + " Wins!";
+        scores[currentPlayer]++;
+        updateScore();
+        gameActive = false;
+        return;
+    }
+
+    if (!board.includes("")) {
+        statusText.textContent = "🤝 It's a Draw!";
+        gameActive = false;
+        return;
+    }
+
+    currentPlayer = currentPlayer === "X" ? "O" : "X";
+    statusText.textContent = "Player " + currentPlayer + "'s Turn";
+}
+
+function updateScore() {
+    document.getElementById("scoreX").textContent = scores.X;
+    document.getElementById("scoreO").textContent = scores.O;
+}
+
+function restart() {
+    board = ["","","","","","","","",""];
+    currentPlayer = "X";
+    gameActive = true;
+
+    cells.forEach(cell => {
+        cell.textContent = "";
+        cell.disabled = false;
+        cell.className = "cell";
+    });
+
+    statusText.textContent = "Player X's Turn";
+}
+
+function resetAll() {
+    scores = { X: 0, O: 0 };
+    updateScore();
+    restart();
+}
+</script>
+
+</body>
+</html>
